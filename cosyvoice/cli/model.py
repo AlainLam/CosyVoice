@@ -437,16 +437,10 @@ class CosyVoice2Model(CosyVoiceModel):
 
         # 缓存与并发配置
         gpu_memory_utilization_str = os.getenv("VLLM_GPU_MEMORY_UTILIZATION")
-        print(f"DEBUG: VLLM_GPU_MEMORY_UTILIZATION env = {gpu_memory_utilization_str}")
-        print(
-            f"DEBUG: CacheConfig.gpu_memory_utilization = {CacheConfig.gpu_memory_utilization}"
-        )
         if gpu_memory_utilization_str is not None:
             gpu_memory_utilization = float(gpu_memory_utilization_str)
-            print(f"DEBUG: Using env value: {gpu_memory_utilization}")
         else:
             gpu_memory_utilization = CacheConfig.gpu_memory_utilization
-            print(f"DEBUG: Using default value: {gpu_memory_utilization}")
 
         block_size_str = os.getenv("VLLM_BLOCK_SIZE")
         if block_size_str is not None:
@@ -473,7 +467,7 @@ class CosyVoice2Model(CosyVoiceModel):
         else:
             swap_space = CacheConfig.swap_space
         ## 前缀缓存
-        env_enable_prefix_caching = os.getenv("VLLM_ENABLE_PREFIX_CACHING", "false")
+        env_enable_prefix_caching = os.getenv("VLLM_ENABLE_PREFIX_CACHING")
         if env_enable_prefix_caching:
             enable_prefix_caching = env_enable_prefix_caching.lower() == "true"
         else:
@@ -531,18 +525,7 @@ class CosyVoice2Model(CosyVoiceModel):
         else:
             num_scheduler_steps = SchedulerConfig.num_scheduler_steps
 
-        # 多模态配置
-        env_disable_mm_preprocessor_cache = os.getenv(
-            "VLLM_DISABLE_MM_PREPROCESSOR_CACHE"
-        )
-        if env_disable_mm_preprocessor_cache:
-            disable_mm_preprocessor_cache = (
-                env_disable_mm_preprocessor_cache.lower() == "true"
-            )
-        else:
-            disable_mm_preprocessor_cache = (
-                MultiModalConfig.disable_mm_preprocessor_cache
-            )
+        # 多模态配置 - CosyVoice2-0.5B 不是多模态模型，跳过 disable_mm_preprocessor_cache 配置
 
         engine_args = EngineArgs(
             model=model_dir,
@@ -564,7 +547,6 @@ class CosyVoice2Model(CosyVoiceModel):
             cpu_offload_gb=cpu_offload_gb,
             preemption_mode=preemption_mode,
             num_scheduler_steps=num_scheduler_steps,
-            disable_mm_preprocessor_cache=disable_mm_preprocessor_cache,
         )
         self.llm.vllm = LLMEngine.from_engine_args(engine_args)
         self.llm.lock = threading.Lock()
