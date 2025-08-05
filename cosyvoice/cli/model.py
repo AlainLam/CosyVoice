@@ -154,8 +154,8 @@ class CosyVoiceModel:
         }
 
     def llm_job(self, text, prompt_text, llm_prompt_speech_token, llm_embedding, uuid):
-        with self.llm_context, torch.cuda.amp.autocast(
-            self.fp16 is True and hasattr(self.llm, "vllm") is False
+        with self.llm_context, torch.amp.autocast('cuda',
+            enabled=self.fp16 is True and hasattr(self.llm, "vllm") is False
         ):
             if isinstance(text, Generator):
                 assert isinstance(self, CosyVoice2Model) and not hasattr(
@@ -208,7 +208,7 @@ class CosyVoiceModel:
         finalize=False,
         speed=1.0,
     ):
-        with torch.cuda.amp.autocast(self.fp16):
+        with torch.amp.autocast('cuda', enabled=self.fp16):
             tts_mel, self.flow_cache_dict[uuid] = self.flow.inference(
                 token=token.to(self.device),
                 token_len=torch.tensor([token.shape[1]], dtype=torch.int32).to(
@@ -572,7 +572,7 @@ class CosyVoice2Model(CosyVoiceModel):
         finalize=False,
         speed=1.0,
     ):
-        with torch.cuda.amp.autocast(self.fp16):
+        with torch.amp.autocast('cuda', enabled=self.fp16):
             tts_mel, _ = self.flow.inference(
                 token=token.to(self.device),
                 token_len=torch.tensor([token.shape[1]], dtype=torch.int32).to(
