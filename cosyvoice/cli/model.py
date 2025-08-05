@@ -436,34 +436,34 @@ class CosyVoice2Model(CosyVoiceModel):
         import os
 
         # 缓存与并发配置
-        gpu_memory_utilization_str = os.getenv("VLLM_GPU_MEMORY_UTILIZATION")
-        if gpu_memory_utilization_str is not None:
-            gpu_memory_utilization = float(gpu_memory_utilization_str)
+        env_gpu_memory_utilization = os.getenv("VLLM_GPU_MEMORY_UTILIZATION")
+        if env_gpu_memory_utilization:
+            gpu_memory_utilization = float(env_gpu_memory_utilization)
         else:
             gpu_memory_utilization = CacheConfig.gpu_memory_utilization
 
-        block_size_str = os.getenv("VLLM_BLOCK_SIZE")
-        if block_size_str is not None:
-            block_size = int(block_size_str)
+        env_block_size = os.getenv("VLLM_BLOCK_SIZE")
+        if env_block_size:
+            block_size = int(env_block_size)
         else:
             block_size = CacheConfig.block_size
 
-        max_model_len_str = os.getenv("VLLM_MAX_MODEL_LEN")
-        if max_model_len_str is not None:
-            max_model_len = int(max_model_len_str)
+        env_max_model_len = os.getenv("VLLM_MAX_MODEL_LEN")
+        if env_max_model_len:
+            max_model_len = int(env_max_model_len)
         else:
             max_model_len = ModelConfig.max_model_len
 
-        max_num_seqs_str = os.getenv("VLLM_MAX_NUM_SEQS")
-        if max_num_seqs_str is not None:
-            max_num_seqs = int(max_num_seqs_str)
+        env_max_num_seqs = os.getenv("VLLM_MAX_NUM_SEQS")
+        if env_max_num_seqs:
+            max_num_seqs = int(env_max_num_seqs)
         else:
             max_num_seqs = SchedulerConfig.max_num_seqs
 
         ## 共享空间
-        swap_space_str = os.getenv("VLLM_SWAP_SPACE")
-        if swap_space_str is not None:
-            swap_space = int(swap_space_str)
+        env_swap_space = os.getenv("VLLM_SWAP_SPACE")
+        if env_swap_space:
+            swap_space = int(env_swap_space)
         else:
             swap_space = CacheConfig.swap_space
         ## 前缀缓存
@@ -473,59 +473,67 @@ class CosyVoice2Model(CosyVoiceModel):
         else:
             enable_prefix_caching = CacheConfig.enable_prefix_caching
         ## KV缓存数据类型
-        kv_cache_dtype = os.getenv("VLLM_KV_CACHE_DTYPE", CacheConfig.cache_dtype)
+        env_kv_cache_dtype = os.getenv("VLLM_KV_CACHE_DTYPE")
+        kv_cache_dtype = (
+            env_kv_cache_dtype if env_kv_cache_dtype else CacheConfig.cache_dtype
+        )
 
         # 禁用 CUDA Graph 编译
-        env_enforce_eager = os.getenv("VLLM_ENFORCE_EAGER", "true")
+        env_enforce_eager = os.getenv("VLLM_ENFORCE_EAGER")
         if env_enforce_eager:
             enforce_eager = env_enforce_eager.lower() == "true"
         else:
             enforce_eager = ModelConfig.enforce_eager
 
         # 模型配置
-        dtype = os.getenv("VLLM_DTYPE", ModelConfig.dtype)
+        env_dtype = os.getenv("VLLM_DTYPE")
+        dtype = env_dtype if env_dtype else ModelConfig.dtype
 
         # 日志配置
+        env_disable_log_stats = os.getenv("VLLM_DISABLE_LOG_STATS")
         disable_log_stats = (
-            os.getenv("VLLM_DISABLE_LOG_STATS", "true").lower() == "true"
+            env_disable_log_stats.lower() == "true" if env_disable_log_stats else True
         )
 
         # 并行配置
-        tensor_parallel_size_str = os.getenv("VLLM_TENSOR_PARALLEL_SIZE")
-        if tensor_parallel_size_str is not None:
-            tensor_parallel_size = int(tensor_parallel_size_str)
+        env_tensor_parallel_size = os.getenv("VLLM_TENSOR_PARALLEL_SIZE")
+        if env_tensor_parallel_size:
+            tensor_parallel_size = int(env_tensor_parallel_size)
         else:
             tensor_parallel_size = ParallelConfig.tensor_parallel_size
 
-        pipeline_parallel_size_str = os.getenv("VLLM_PIPELINE_PARALLEL_SIZE")
-        if pipeline_parallel_size_str is not None:
-            pipeline_parallel_size = int(pipeline_parallel_size_str)
+        env_pipeline_parallel_size = os.getenv("VLLM_PIPELINE_PARALLEL_SIZE")
+        if env_pipeline_parallel_size:
+            pipeline_parallel_size = int(env_pipeline_parallel_size)
         else:
             pipeline_parallel_size = ParallelConfig.pipeline_parallel_size
 
         # 内存管理优化配置
-        use_v2_block_manager = (
-            os.getenv("VLLM_USE_V2_BLOCK_MANAGER", "true").lower() == "true"
-        )
+        env_use_v2_block_manager = os.getenv("VLLM_USE_V2_BLOCK_MANAGER")
+        if env_use_v2_block_manager:
+            use_v2_block_manager = env_use_v2_block_manager.lower() == "true"
+        else:
+            use_v2_block_manager = CacheConfig.use_v2_block_manager
 
-        cpu_offload_gb_str = os.getenv("VLLM_CPU_OFFLOAD_GB")
-        if cpu_offload_gb_str is not None:
-            cpu_offload_gb = float(cpu_offload_gb_str)
+        env_cpu_offload_gb = os.getenv("VLLM_CPU_OFFLOAD_GB")
+        if env_cpu_offload_gb:
+            cpu_offload_gb = float(env_cpu_offload_gb)
         else:
             cpu_offload_gb = CacheConfig.cpu_offload_gb
 
         # 调度优化配置
-        preemption_mode = os.getenv(
-            "VLLM_PREEMPTION_MODE", SchedulerConfig.preemption_mode
+        env_preemption_mode = os.getenv("VLLM_PREEMPTION_MODE")
+        preemption_mode = (
+            env_preemption_mode
+            if env_preemption_mode
+            else SchedulerConfig.preemption_mode
         )
 
-        num_scheduler_steps_str = os.getenv("VLLM_NUM_SCHEDULER_STEPS")
-        if num_scheduler_steps_str is not None:
-            num_scheduler_steps = int(num_scheduler_steps_str)
+        env_num_scheduler_steps = os.getenv("VLLM_NUM_SCHEDULER_STEPS")
+        if env_num_scheduler_steps:
+            num_scheduler_steps = int(env_num_scheduler_steps)
         else:
             num_scheduler_steps = SchedulerConfig.num_scheduler_steps
-
-        # 多模态配置 - CosyVoice2-0.5B 不是多模态模型，跳过 disable_mm_preprocessor_cache 配置
 
         engine_args = EngineArgs(
             model=model_dir,
